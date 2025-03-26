@@ -1,113 +1,75 @@
 # seamcarver
 
-/* *****************************************************************************
- *  Describe concisely your algorithm to find a horizontal (or vertical)
- *  seam.
- **************************************************************************** */
-I used the dynamic programming approach to find the vertical seam. First I created
-two matrixes: energyGrid and distTo. energyGrid tracks the energy value of each
-individual pixel. Using that, I then used dynamic programming to compute the distTo
-matrix, which tracked the minimum energy value of pixel (x,y) from starting from
-any pixel in the top row. The basic idea is to start with the base case which is
-just the top row which with each of their respective energy pixel. Then starting
-with the next row down, we find the three adjacent pixels in the row above in col
-x-1, x, and x+1. We take the minimum value of the three and then add the energy
-value of the current pixel to get the cumulative minimum energy level of that pixel.
-The same design continues downward to the last to until we have filled up the entire
-distTo matrix.
+## Algorithm Description for Finding a Seam
 
-To then find the vertical seam, I found the minimum energy level of the last row
-and stored that value in a stack. Afterward, I looked at the three adjecent columns
-in the row above and found the column with the minimum cimulative value and added
-that to the stack. I kept doing this all the way up to the top row. Then by popping
-the values from the stack, I obtained the array for the vertical seam.
+I implemented a dynamic programming approach to identify vertical seams in an image. The process involves:
 
-To find the horizontal seam, I just transposed the picture, called find vertical
-seam, and then transposed the picture back.
+1. **Initialization**: Two matrices are created:
+   - `energyGrid`: Stores the energy value of each pixel.
+   - `distTo`: Tracks the minimum cumulative energy from any pixel in the top row to the pixel at position (x, y).
 
+2. **Dynamic Programming**:
+   - Start with the top row as the base case, where `distTo` values equal the corresponding `energyGrid` values.
+   - For each subsequent row, compute the `distTo` value for a pixel by:
+     - Considering the three adjacent pixels in the row above (columns x-1, x, x+1).
+     - Taking the minimum of these three values and adding the current pixel’s energy.
+   - Continue this process downward to fill the `distTo` matrix.
 
-/* *****************************************************************************
- *  Describe what makes an image suitable to the seam-carving approach
- *  (in terms of preserving the content and structure of the original
- *  image, without introducing visual artifacts). Describe an image that
- *  would not work well.
- **************************************************************************** */
-A suitable image would be one with a lot of background such as the sky or ocean.
-Because there is not much contrast in these background regions, removing a seam
-would not disturb or introduce a lot of visual artifacts.
+3. **Seam Identification**:
+   - Locate the minimum energy value in the bottom row of `distTo` and add its column index to a stack.
+   - Backtrack upward, at each row selecting the column (from the three above) with the minimum cumulative energy, adding it to the stack.
+   - Pop the stack to construct the vertical seam array.
 
-A not so suitable image would be one of a human portrait. This is because there is
-a lot of contrast and contour in a human face that when you apply seam-carving, it
-will distrupt the structure of the original image.
+4. **Horizontal Seam**:
+   - Transpose the image, apply the vertical seam algorithm, then transpose back.
 
-/* *****************************************************************************
- *  Perform computational experiments to estimate the running time to reduce
- *  a W-by-H image by one column and one row (i.e., one call each to
- *  findVerticalSeam(), removeVerticalSeam(), findHorizontalSeam(), and
- *  removeHorizontalSeam()). Use a "doubling" hypothesis, where you
- *  successively increase either W or H by a constant multiplicative
- *  factor (not necessarily 2).
- *
- *  To do so, fill in the two tables below. Each table must have 5-10
- *  data points, ranging in time from around 0.25 seconds for the smallest
- *  data point to around 30 seconds for the largest one.
- **************************************************************************** */
+## Suitability for Seam Carving
 
-(keep W constant)
- W = 2000
- multiplicative factor (for H) = 2
+### Suitable Images
+Images with large, uniform backgrounds (e.g., sky, ocean) work well. These areas have low contrast, so removing seams minimally affects the image’s content and structure, avoiding noticeable visual artifacts.
 
- H           time (seconds)      ratio       log ratio
-------------------------------------------------------
-1000            0.319           n/a             n/a
-2000            0.596           1.868           0.901
-4000            1.252           2.101           1.071
-8000            2.509           2.003           1.002
-16000           5.161           2.057           1.041
-32000           10.203          1.977           0.983
-64000           20.137          1.974           0.981
-128000          40.351          2.004           1.003
+### Unsuitable Images
+Images like human portraits are less suitable. High contrast and detailed contours (e.g., facial features) mean seam removal can distort critical structures, introducing significant visual artifacts.
+
+## Performance Analysis
+
+I conducted experiments to estimate the running time for reducing an image by one column and one row (calling `findVerticalSeam()`, `removeVerticalSeam()`, `findHorizontalSeam()`, and `removeHorizontalSeam()`). The "doubling" hypothesis was tested by increasing either width (W) or height (H) by a factor of 2.
+
+### Experiment 1: Fixed W = 2000, Varying H
+| H       | Time (seconds) | Ratio | Log Ratio |
+|---------|----------------|-------|-----------|
+| 1000    | 0.319          | n/a   | n/a       |
+| 2000    | 0.596          | 1.868 | 0.901     |
+| 4000    | 1.252          | 2.101 | 1.071     |
+| 8000    | 2.509          | 2.003 | 1.002     |
+| 16000   | 5.161          | 2.057 | 1.041     |
+| 32000   | 10.203         | 1.977 | 0.983     |
+| 64000   | 20.137         | 1.974 | 0.981     |
+| 128000  | 40.351         | 2.004 | 1.003     |
+
+### Experiment 2: Fixed H = 2000, Varying W
+| W       | Time (seconds) | Ratio | Log Ratio |
+|---------|----------------|-------|-----------|
+| 1000    | 0.317          | n/a   | n/a       |
+| 2000    | 0.611          | 1.927 | 0.946     |
+| 4000    | 1.157          | 1.894 | 0.921     |
+| 8000    | 2.542          | 2.197 | 1.136     |
+| 16000   | 5.082          | 1.999 | 0.999     |
+| 32000   | 10.174         | 2.002 | 1.001     |
+| 64000   | 20.029         | 1.969 | 0.977     |
+| 128000  | 39.985         | 1.996 | 0.997     |
+
+## Running Time Formula
+
+Using the empirical data, the running time (in seconds) to find and remove one horizontal and one vertical seam is approximated as:
+
+~ 1.6e-07 * W * H
 
 
-(keep H constant)
- H = 2000
- multiplicative factor (for W) = 2
+### Derivation
+- **Exponent**: The average log ratios in both tables converge to ~1, indicating linear dependence on both W and H (time doubles as W or H doubles).
+- **Coefficient**: Using the data point (W = 64000, H = 2000, time = 20.029), solve `T = a * W * H`:
+  - `20.029 = a * 64000 * 2000`
+  - `a = 20.029 / (64000 * 2000) ≈ 1.6e-07`
 
- W           time (seconds)      ratio       log ratio
-------------------------------------------------------
-1000            0.317           n/a             n/a
-2000            0.611           1.927           0.946
-4000            1.157           1.894           0.921
-8000            2.542           2.197           1.136
-16000           5.082           1.999           0.999
-32000           10.174          2.002           1.001
-64000           20.029          1.969           0.977
-128000          39.985          1.996           0.997
-
-
-/* *****************************************************************************
- *  Using the empirical data from the above two tables, give a formula
- *  (using tilde notation) for the running time (in seconds) as a function
- *  of both W and H, such as
- *
- *       ~ 5.3*10^-8 * W^5.1 * H^1.5
- *
- *  Briefly explain how you determined the formula for the running time.
- *  Recall that with tilde notation, you include both the coefficient
- *  and exponents of the leading term (but not lower-order terms).
- *  Round each coefficient and exponent to two significant digits.
- **************************************************************************** */
-
-Running time (in seconds) to find and remove one horizontal seam and one
-vertical seam, as a function of both W and H:
-
-
-Looking at the average of the log ratio of both tables, both round up and converge to
-1. This indicates that it is linear with respect to both W and H. In other words,
-the running time doubel as H doubles or W doubles, holding one of the variables
-constant. To determine the coefficient, we can use one of the sample. For instance,
-I used W = 64000 and H = 2000 with runtime of 20.029. Solving the equation T = aWH,
-we get 20.029 = a(64000)(2000). Therefore, a = 1.6e-07
-
-    ~   1.6e-07 * W * H
-       _______________________________________
+This formula, in tilde notation, captures the leading term of the running time as a function of image dimensions W and H.
